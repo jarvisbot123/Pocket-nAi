@@ -41,21 +41,17 @@ module.exports = {
       if (event.messageReply) {
         targetId = event.messageReply.senderID || event.messageReply.sender?.id;
       } else if (event.mentions && Object.keys(event.mentions).length > 0) {
+        
         targetId = Object.keys(event.mentions)[0];
         const mentionName = event.mentions[targetId];
         userText = args.join(" ").replace(new RegExp(`@?${mentionName}`, "gi"), "").trim();
       } else if (args.length > 0 && /^\d+$/.test(args[0])) {
+        
         targetId = args[0];
         userText = args.slice(1).join(" ").trim();
       } else {
         return message.reply("❌ Please reply, mention, or provide user uid.");
       }
-
-      // === PROTECTION ADDED HERE ===
-      if (targetId === "61557991443492") {
-        return message.reply("muri khau bby 😹🤏");
-      }
-      // ==============================
 
       if (!userText) return message.reply("❌ Please provide the text for the fake chat.");
 
@@ -67,7 +63,7 @@ module.exports = {
       }
 
       const baseApi = await mahmhd();
-      const apiUrl = `\( {baseApi}/api/fakechat?id= \){targetId}&name=${encodeURIComponent(
+      const apiUrl = `${baseApi}/api/fakechat?id=${targetId}&name=${encodeURIComponent(
         userName
       )}&text=${encodeURIComponent(userText)}`;
 
@@ -84,7 +80,7 @@ module.exports = {
         try { fs.unlinkSync(filePath); } catch {}
       }, 5000);
     } catch {
-      await message.reply("🥹error, contact Karim");
+      await message.reply("🥹error, contact Hasib");
     }
   },
 };
