@@ -3,7 +3,7 @@ const { createCanvas, loadImage } = require("canvas");
 const fs = require("fs");
 const path = require("path");
 
-// Load Facebook avatar correctly
+// Load Facebook avatar properly
 async function loadFBAvatar(uid) {
   const url = `https://graph.facebook.com/${uid}/picture?width=720&height=720`;
   const res = await axios.get(url, {
@@ -15,7 +15,7 @@ async function loadFBAvatar(uid) {
 
 module.exports = {
   config: {
-    name: "mygf",
+    name: "pair",
     author: "Hasib",
     category: "LOVE",
   },
@@ -91,14 +91,14 @@ module.exports = {
         ctx.restore();
       }
 
-      // ===== AVATAR POSITION (SIZE 250) =====
-      const avatarSize = 250;
-      const offsetY = -20; // move up slightly to align with rings
+      // ===== AVATAR SIZE & POSITION =====
+      const avatarSize = 240;
+      const offsetY = -height / 18; // slightly up, about 1.8 factor adjustment
 
-      const leftX = 80;
+      const leftX = width * 0.09; // slightly inside left
       const leftY = height / 2 - avatarSize / 2 + offsetY;
 
-      const rightX = width - avatarSize - 80;
+      const rightX = width - avatarSize - width * 0.09; // slightly inside right
       const rightY = height / 2 - avatarSize / 2 + offsetY;
 
       drawCircle(avatar1, leftX, leftY, avatarSize);
