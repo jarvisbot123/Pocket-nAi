@@ -156,13 +156,13 @@ module.exports = {
       }
 
       // Left avatar
-      drawCircleImage(ctx, sIdImage, 50, height / 2 - avatarSize / 2, avatarSize);
+      drawCircleImage(ctx, sIdImage, 50, height / 1 - avatarSize / 1, avatarSize);
       // Right avatar
       drawCircleImage(
         ctx,
         pairPersonImage,
-        width - 50 - avatarSize,
-        height / 2 - avatarSize / 2,
+        width - 25 - avatarSize,
+        height / 1 - avatarSize / 1,
         avatarSize
       );
 
