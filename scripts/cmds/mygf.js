@@ -4,7 +4,7 @@ const path = require("path");
 
 module.exports = {
   config: {
-    name: "mygf",
+    name: "pair6",
     author: "Hasib (Perfect fit template)",
     category: "love",
   },
@@ -94,12 +94,12 @@ module.exports = {
       }
 
       // ================= AVATAR SIZE =================
-      const rx = 175; // 350 / 2
-      const ry = 177; // 354 / 2
+      const rx = 175;
+      const ry = 177;
 
-      // ================= FINAL POSITIONS =================
-      drawEllipseAvatar(senderImage, 352, 520, rx, ry); // 👑 King
-      drawEllipseAvatar(matchImage, 992, 340, rx, ry); // 👑 Queen
+      // ================= FINAL POSITIONS (OPTION B) =================
+      drawEllipseAvatar(senderImage, 520, 360, rx, ry); // 👑 King
+      drawEllipseAvatar(matchImage, 340, 360, rx, ry); // 👑 Queen
 
       // ================= SAVE =================
       const outputPath = path.join(
