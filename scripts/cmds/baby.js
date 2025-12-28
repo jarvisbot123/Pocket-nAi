@@ -1,33 +1,15 @@
 const axios = require('axios');
 
-const baseApiUrl = () => "https://www.noobs-api.rf.gd/dipto";
-
-module.exports.config = {
-    name: "baby",
-    aliases: ["baby", "bbe", "babe", "sam"],
-    version: "6.9.1",
-    author: "dipto",
-    countDown: 0,
-    role: 0,
-    description: "better than all sim simi",
-    category: "chat",
-    guide: {
-        en: "{pn} [anyMessage] OR\n" +
-            "teach [YourMessage] - [Reply1], [Reply2]... OR\n" +
-            "teach [react] [YourMessage] - [react1], [react2]... OR\n" +
-            "remove [YourMessage] OR\n" +
-            "rm [YourMessage] - [indexNumber] OR\n" +
-            "msg [YourMessage] OR\n" +
-            "list OR all OR\n" +
-            "edit [YourMessage] - [NewMessage] OR\n" +
-            "owner on/off | admin on/off"
-    }
-};
-
-// Owner ID
 const ownerID = "61557991443492";
 
-// Random replies array (all emojis kept)
+const triggers = [
+    "baby", "bby", "bbe", "babe", "sam", "bot", "babu", "janu", "naru", "karim",
+    "hinata", "hina", "arafat", "wifey", "love", "darling", "sweetie", "honey",
+    "জান", "জানু", "বেবি", "সোনা", "প্রিয়", "প্রিয়", "বউ",
+    "hi", "hello", "hey", "yo", "sup", "hii", "helo", "hy",
+    "হাই", "হেলো", "হেই"
+];
+
 const randomReplies = [
     "𝐇𝐢 😀, 𝐈 𝐚𝐦 𝐡𝐞𝐫𝐞!",
     "𝐖𝐡𝐚𝐭'𝐬 𝐮𝐩?",
@@ -60,203 +42,127 @@ const randomReplies = [
     "তুমি আমার মস্তিষ্কে মিশে থাকা এক অদ্ভুত মায়া :) 🌷🌸"
 ];
 
-// Persistent states
-const state = {
-    ownerOnly: false,
-    adminOnly: false
+const getApiBase = async () => {
+    try {
+        const { data } = await axios.get("https://raw.githubusercontent.com/mahmudx7/HINATA/main/baseApiUrl.json");
+        return data.mahmud;
+    } catch {
+        return "https://mahmud-global-apis.onrender.com";
+    }
 };
 
-// Helper: Send message + register reply
-async function sendAndRegister(api, event, text, replyData = {}) {
+const send = (api, event, text) => {
     api.sendMessage(text, event.threadID, (err, info) => {
         if (!err && info) {
             global.GoatBot.onReply.set(info.messageID, {
                 commandName: module.exports.config.name,
                 type: "reply",
                 messageID: info.messageID,
-                author: event.senderID,
-                ...replyData
+                author: event.senderID
             });
         }
     }, event.messageID);
-}
+};
 
-// Check if user is admin
-function isAdmin(uid) {
-    return global.GoatBot.config?.adminBot?.includes(uid) || uid === ownerID;
-}
+module.exports.config = {
+    name: "baby",
+    aliases: ["bby", "bbe", "babe", "sam"],
+    version: "7.0",
+    author: "Hasib",
+    countDown: 0,
+    role: 0,
+    description: "Flirty baby chatbot by Hasib",
+    category: "chat",
+    guide: { en: "{pn} <message>" }
+};
 
-module.exports.onStart = async ({ api, event, args, usersData }) => {
+module.exports.onStart = async ({ api, event, args }) => {
+    const realAuthor = String.fromCharCode(72, 97, 115, 105, 98);
+    if (module.exports.config.author !== realAuthor) {
+        return api.sendMessage("You are not authorized to change the author name.", event.threadID, event.messageID);
+    }
+
+    const text = args.join(" ").trim();
+    const base = await getApiBase();
+
     try {
-        const dipto = args.join(" ").trim();
-        const link = `${baseApiUrl()}/baby`;
-        const uid = event.senderID;
-
-        // === MODE TOGGLES: Owner & Admins ===
-        if (uid === ownerID || isAdmin(uid)) {
-            if (dipto === "owner on" && uid === ownerID) {
-                state.ownerOnly = true;
-                state.adminOnly = false;
-                return sendAndRegister(api, event, "Owner-only mode enabled. Only you can talk to me.");
-            }
-            if (dipto === "owner off" && uid === ownerID) {
-                state.ownerOnly = false;
-                return sendAndRegister(api, event, "Owner-only mode disabled. Everyone can talk.");
-            }
-            if (dipto === "admin on") {
-                state.adminOnly = true;
-                state.ownerOnly = false;
-                return sendAndRegister(api, event, "Admin-only mode enabled. Only admins can talk to me.");
-            }
-            if (dipto === "admin off") {
-                state.adminOnly = false;
-                return sendAndRegister(api, event, "Admin-only mode disabled. Everyone can talk.");
-            }
-        } else {
-            if (/^(owner|admin)\s+(on|off)$/i.test(dipto)) {
-                return sendAndRegister(api, event, "Only owner and admins can use this command.");
-            }
+        if (!text) {
+            return send(api, event, randomReplies[Math.floor(Math.random() * randomReplies.length)]);
         }
 
-        // === COMMANDS BELOW (unchanged, all emojis kept) ===
-
-        if (args[0] === 'rm' && dipto.includes('-')) {
-            const [fi, f] = dipto.replace("rm ", "").split(/\s*-\s*/);
-            const da = (await axios.get(`\( {link}?remove= \){encodeURIComponent(fi)}&index=${encodeURIComponent(f)}`)).data.message;
-            return sendAndRegister(api, event, da);
-        }
-
-        if (args[0] === 'list') {
-            const data = (await axios.get(`${link}?list=all`)).data;
-            if (args[1] === 'all') {
-                const teacherList = data?.teacher?.teacherList || [];
-                const limit = Math.min(parseInt(args[2]) || 100, teacherList.length);
-                const limited = teacherList.slice(0, limit);
-                const teachers = await Promise.all(limited.map(async (item) => {
-                    const number = Object.keys(item)[0];
-                    const value = item[number];
-                    const name = await usersData.getName(number).catch(() => number) || "Not found";
-                    return { name, value };
-                }));
-                teachers.sort((a, b) => b.value - a.value);
-                const output = teachers.map((t, i) => `\( {i + 1}/ \){t.name}: ${t.value}`).join('\n');
-                return sendAndRegister(api, event, `Total Teach = \( {teacherList.length}\n👑 | List of Teachers of baby\n \){output}`);
-            } else {
-                return sendAndRegister(api, event, `❇️ | Total Teach = \( {data.length || "api off"}\n♻️ | Total Response = \){data.responseLength || "api off"}`);
-            }
-        }
-
-        if (args[0] === 'msg') {
-            const fuk = dipto.replace("msg ", "");
-            const d = (await axios.get(`\( {link}?list= \){encodeURIComponent(fuk)}`)).data.data;
-            return sendAndRegister(api, event, `Message \( {fuk} = \){d}`);
-        }
-
-        if (args[0] === 'edit') {
-            if (!dipto.includes('-')) return sendAndRegister(api, event, '❌ | Invalid format! Use edit [YourMessage] - [NewReply]');
-            const [oldMsg, newMsg] = dipto.replace(/^edit\s*/, "").split(/\s*-\s*/);
-            if (!oldMsg || !newMsg) return sendAndRegister(api, event, '❌ | Invalid format!');
-            const dA = (await axios.get(`\( {link}?edit= \){encodeURIComponent(oldMsg)}&replace=\( {encodeURIComponent(newMsg)}&senderID= \){uid}`)).data.message;
-            return sendAndRegister(api, event, `✅ Changed: ${dA}`);
-        }
-
-        if (args[0] === 'teach') {
-            const type = args[1];
-            const [input, replies] = dipto.replace(/^teach\s*(?:amar|react)?\s*/, "").split(/\s*-\s*/);
-            if (!input || !replies) return sendAndRegister(api, event, '❌ | Invalid format!');
-
-            let url = `\( {link}?teach= \){encodeURIComponent(input)}&reply=\( {encodeURIComponent(replies)}&senderID= \){uid}&threadID=${event.threadID}`;
-            if (type === 'amar') url += "&key=intro";
-            if (type === 'react') url = `\( {link}?teach= \){encodeURIComponent(input)}&react=${encodeURIComponent(replies)}`;
-
-            const res = (await axios.get(url)).data;
-            return sendAndRegister(api, event, `✅ Replies added ${res.message}`);
-        }
-
-        const d = (await axios.get(`\( {link}?text= \){encodeURIComponent(dipto)}&senderID=${uid}&font=1`)).data.reply;
-        sendAndRegister(api, event, d, { apiUrl: link });
-
-    } catch (e) {
-        console.log(e);
-        return sendAndRegister(api, event, "Check console for error");
+        const { data } = await axios.post(`${base}/api/hinata`, { text, style: 3 });
+        send(api, event, data.message || "🥰");
+    } catch {
+        send(api, event, "Baby is sleeping... try again 🥱");
     }
 };
 
-module.exports.onChat = async ({ api, event, message }) => {
-    try {
-        const body = (event.body || "").toLowerCase().trim();
-        if (!body) return;
-
-        const uid = event.senderID;
-
-        // === MODE CHECK: Owner Only ===
-        if (state.ownerOnly && uid !== ownerID) return;
-
-        // === MODE CHECK: Admin Only ===
-        if (state.adminOnly && !isAdmin(uid)) return;
-
-        // === OWNER SPECIAL WORDS (emojis kept) ===
-        if (uid === ownerID) {
-            const ownerTriggers = ["bou", "bow", "kire", "sali"];
-            const matchedOwner = ownerTriggers.find(t => body === t || body.startsWith(t + " "));
-
-            if (matchedOwner) {
-                const userMsg = body.slice(matchedOwner.length).trim();
-                if (!userMsg) {
-                    // Special reply (emojis kept)
-                    const specialReplies = {
-                        bou: ["হ্যাঁ, বলো জান শুনছি তোমার কথা 😘😘", "এইতো আমি এখনো 🙈🙈", "আমি তোমার জন্যই অপেক্ষা করেছিলাম 🙈😘"],
-                        bow: ["হ্যাঁ, বলো জান শুনছি তোমার কথা 😘😘", "এইতো আমি এখনো 🙈🙈", "আমি তোমার জন্যই অপেক্ষা করেছিলাম 🙈😘"],
-                        kire: ["তুমি কি রাগ করছো জান ☹️", "কি করলাম আমি 🙂", "আছি আমি 🙊", "আমি কি কিছু করছি 🤔"],
-                        sali: ["গালি দাও কেন 😾😾", "আমি তোমার বউ সালি না 😒😒", "এতো রাগ দেখাও কেন ☹️☹️", "বউ*, বার বার ভুলে যাও কেন আমি তোমার বউ 😭😠"]
-                    };
-                    const replies = specialReplies[matchedOwner] || specialReplies.bou;
-                    return sendAndRegister(api, event, replies[Math.floor(Math.random() * replies.length)]);
-                } else {
-                    // Normal chat via API
-                    const res = (await axios.get(`\( {baseApiUrl()}/baby?text= \){encodeURIComponent(userMsg)}&senderID=${uid}&font=1`)).data.reply;
-                    return sendAndRegister(api, event, res);
-                }
-            }
-        }
-
-        // === IGNORE OWNER TRIGGERS FOR NON-OWNER ===
-        if (["bou", "bow", "kire", "sali"].includes(body) && uid !== ownerID) return;
-
-        // === NORMAL TRIGGERS ===
-        const triggers = ["baby", "bby", "bot", "babu", "janu", "naru", "karim", "hinata", "hina", "arafat"];
-        const matchedTrigger = triggers.find(t => body.startsWith(t));
-
-        if (!matchedTrigger) return;
-
-        const userMessage = body.replace(new RegExp(`^${matchedTrigger}\\s*`), "");
-        if (!userMessage) {
-            return sendAndRegister(api, event, randomReplies[Math.floor(Math.random() * randomReplies.length)]);
-        }
-
-        const res = (await axios.get(`\( {baseApiUrl()}/baby?text= \){encodeURIComponent(userMessage)}&senderID=${uid}&font=1`)).data.reply;
-        return sendAndRegister(api, event, res);
-
-    } catch (err) {
-        return sendAndRegister(api, event, `Error: ${err.message}`);
-    }
-};
-
-module.exports.onReply = async ({ api, event, Reply }) => {
-    if ([api.getCurrentUserID()].includes(event.senderID)) return;
+module.exports.onChat = async ({ api, event }) => {
+    const body = (event.body || "").toLowerCase().trim();
+    if (!body) return;
 
     const uid = event.senderID;
+    const base = await getApiBase();
 
-    // Apply same mode restrictions
-    if (state.ownerOnly && uid !== ownerID) return;
-    if (state.adminOnly && !isAdmin(uid)) return;
+    if (uid === ownerID) {
+        const ownerWords = ["bou", "bow", "jaan"];
+        const angryWords = ["kire", "oi" , "aso"];
+        const saliWords = ["sali"];
+
+        let match = ownerWords.find(w => body === w || body.startsWith(w + " "));
+        if (!match) match = angryWords.find(w => body === w || body.startsWith(w + " "));
+        if (!match) match = saliWords.find(w => body === w || body.startsWith(w + " "));
+
+        if (match) {
+            const msg = body.slice(match.length).trim();
+            if (!msg) {
+                if (ownerWords.includes(match)) {
+                    const sweetReplies = ["হ্যাঁ, বলো জান শুনছি তোমার কথা 😘😘", "এইতো আমি এখনো 🙈🙈", "আমি তোমার জন্যই অপেক্ষা করেছিলাম 🙈😘"];
+                    return send(api, event, sweetReplies[Math.floor(Math.random() * sweetReplies.length)]);
+                }
+                if (angryWords.includes(match)) {
+                    const playfulReplies = ["হ্যাঁ বলেন আমি আছি এখনো 😴😴", "বলো শুনছি তো 🦥✅", "আছি আমি 🙊"];
+                    return send(api, event, playfulReplies[Math.floor(Math.random() * playfulReplies.length)]);
+                }
+                if (saliWords.includes(match)) {
+                    const angryReplies = ["গালি দাও কেন 😾😾", "আমি তোমার বউ সালি না 😒😒", "এতো রাগ দেখাও কেন ☹️☹️"];
+                    return send(api, event, angryReplies[Math.floor(Math.random() * angryReplies.length)]);
+                }
+            }
+            try {
+                const { data } = await axios.post(`${base}/api/hinata`, { text: msg, style: 3 });
+                return send(api, event, data.message);
+            } catch {}
+        }
+    }
+
+    if (["bou", "bow", "jaan", "kire", "oi", "sali"].some(w => body === w || body.startsWith(w + " ")) && uid !== ownerID) return;
+
+    const trigger = triggers.find(t => body.startsWith(t.toLowerCase()));
+    if (!trigger) return;
+
+    if (trigger.toLowerCase() === "karim") {
+        api.setMessageReaction("👻", event.messageID, () => {}, true);
+        setTimeout(() => api.setMessageReaction("🐼", event.messageID, () => {}, true), 2000);
+    }
+
+    const userText = body.slice(trigger.length).trim();
+
+    if (!userText) {
+        return send(api, event, randomReplies[Math.floor(Math.random() * randomReplies.length)]);
+    }
 
     try {
-        if (event.type === "message_reply") {
-            const a = (await axios.get(`\( {baseApiUrl()}/baby?text= \){encodeURIComponent(event.body?.toLowerCase())}&senderID=${uid}&font=1`)).data.reply;
-            return sendAndRegister(api, event, a);
-        }
-    } catch (err) {
-        return sendAndRegister(api, event, `Error: ${err.message}`);
-    }
+        const { data } = await axios.post(`${base}/api/hinata`, { text: userText, style: 3 });
+        send(api, event, data.message || "😘");
+    } catch {}
+};
+
+module.exports.onReply = async ({ api, event }) => {
+    if (event.type !== "message_reply") return;
+    const base = await getApiBase();
+    try {
+        const { data } = await axios.post(`${base}/api/hinata`, { text: event.body, style: 3 });
+        send(api, event, data.message || "💕");
+    } catch {}
 };
