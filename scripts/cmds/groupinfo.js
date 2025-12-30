@@ -4,13 +4,13 @@ const request = require("request");
 module.exports = {
   config: {
     name: "groupinfo",
-    aliases: ['boxinfo'],
-    version: "1.4",
-    author: "xemon",
+    aliases: ["boxinfo"],
+    version: "1.8",
+    author: "Hasib",
     countDown: 5,
-    role: 0, // Everyone by default, but we restrict manually
-    shortDescription: "See group info (Admin & Owner only)",
-    longDescription: "Displays information about the current group (admins, members, messages, etc).",
+    role: 0,
+    shortDescription: "Group information",
+    longDescription: "Clean & minimal group info (Admin & Owner only)",
     category: "box chat",
     guide: {
       en: "{p}groupinfo"
@@ -21,84 +21,102 @@ module.exports = {
     try {
       const threadInfo = await api.getThreadInfo(event.threadID);
 
-      // 🔒 Allowed owners (hardcoded)
+      // Bot owners
       const owners = ["100060606189407", "61557991443492"];
-
-      // Sender
       const senderID = event.senderID;
 
-      // Check if admin
       const isAdmin = threadInfo.adminIDs.some(ad => ad.id === senderID);
-
-      // Check if owner
       const isOwner = owners.includes(senderID);
 
       if (!isAdmin && !isOwner) {
         return api.sendMessage(
-          "❌ Only group admins or bot owner can use this command.",
+          "Only group admins or bot owners can use this command.",
           event.threadID,
           event.messageID
         );
       }
 
-      const memLength = threadInfo.participantIDs.length;
+      // Members
+      const totalMembers = threadInfo.participantIDs.length;
+      let male = 0, female = 0, other = 0;
 
-      // Count genders
-      let males = 0, females = 0, others = 0;
       for (const user of threadInfo.userInfo) {
-        if (user.gender === "MALE") males++;
-        else if (user.gender === "FEMALE") females++;
-        else others++;
+        if (user.gender === "MALE") male++;
+        else if (user.gender === "FEMALE") female++;
+        else other++;
       }
 
       // Admin list
-      let listAdmins = "";
+      let adminList = "";
       for (const ad of threadInfo.adminIDs) {
-        const user = await api.getUserInfo(ad.id);
-        listAdmins += `• ${user[ad.id].name}\n`;
+        const info = await api.getUserInfo(ad.id);
+        adminList += `• ${info[ad.id]?.name || "Unknown"}\n`;
       }
 
-      const approval = threadInfo.approvalMode ? "On ✅" : "Off ❌";
-      const icon = threadInfo.emoji || "😃";
-      const threadName = threadInfo.threadName || "Unnamed Group";
-      const groupID = threadInfo.threadID;
-      const totalMessages = threadInfo.messageCount || "N/A";
+      // Estimated creator
+      let creatorName = "Unknown";
+      if (threadInfo.adminIDs.length > 0) {
+        const creatorID = threadInfo.adminIDs[0].id;
+        const creatorInfo = await api.getUserInfo(creatorID);
+        creatorName = creatorInfo[creatorID]?.name || "Unknown";
+      }
 
-      const infoText =
-        `🔧「 Group Name 」: ${threadName}\n` +
-        `🔧「 Group ID 」: ${groupID}\n` +
-        `🔧「 Approval Mode 」: ${approval}\n` +
-        `🔧「 Emoji 」: ${icon}\n` +
-        `🔧「 Members 」: ${memLength}\n` +
-        `🔧「 Males 」: ${males}\n` +
-        `🔧「 Females 」: ${females}\n` +
-        `🔧「 Others 」: ${others}\n` +
-        `🔧「 Total Admins 」: ${threadInfo.adminIDs.length}\n` +
-        `🔧「 Admin List 」:\n${listAdmins}\n` +
-        `🔧「 Total Messages 」: ${totalMessages} msgs\n\n` +
-        `✨ Made with ❤️ by ${this.config.author}`;
+      const groupName = (threadInfo.threadName || "Unnamed Group").toUpperCase();
 
-      const sendInfo = (attachment = null) => {
+      const text =
+`━━━━━━━━━━━━━━━━━━━━
+         ${groupName}
+━━━━━━━━━━━━━━━━━━━━
+      𖣘︎𝗚𝗥𝗢𝗨𝗣 𝗜𝗡𝗙𝗢𝗥𝗠𝗔𝗧𝗜𝗢𝗡𖣘︎
+ID          : ${threadInfo.threadID}
+Creator     : ${creatorName}
+Approval    : ${threadInfo.approvalMode ? "ON" : "OFF"}
+Emoji       : ${threadInfo.emoji || "-"}
+
+Members
+───────
+Total       : ${totalMembers}
+Male        : ${male}
+Female      : ${female}
+Other       : ${other}
+
+Admins (${threadInfo.adminIDs.length})
+──────────
+${adminList}
+Activity
+────────
+Messages    : ${threadInfo.messageCount || "N/A"}
+
+━━━━━━━━━━━━━━━━━━━━
+Made by ${this.config.author}`;
+
+      const send = (attachment = null) => {
         api.sendMessage(
-          { body: infoText, attachment },
+          { body: text, attachment },
           event.threadID,
-          attachment ? () => fs.unlinkSync(__dirname + "/cache/1.png") : null,
+          attachment ? () => fs.unlinkSync(__dirname + "/cache/group.png") : null,
           event.messageID
         );
       };
 
+      // Group image
       if (threadInfo.imageSrc) {
-        // Download group image if exists
         request(encodeURI(threadInfo.imageSrc))
-          .pipe(fs.createWriteStream(__dirname + "/cache/1.png"))
-          .on("close", () => sendInfo(fs.createReadStream(__dirname + "/cache/1.png")));
+          .pipe(fs.createWriteStream(__dirname + "/cache/group.png"))
+          .on("close", () =>
+            send(fs.createReadStream(__dirname + "/cache/group.png"))
+          );
       } else {
-        sendInfo(); // No image
+        send();
       }
 
     } catch (err) {
       console.error(err);
-      api.sendMessage("⚠️ Failed to fetch group info!", event.threadID, event.messageID);
+      api.sendMessage(
+        "Failed to get group information.",
+        event.threadID,
+        event.messageID
+      );
     }
   }
 };
