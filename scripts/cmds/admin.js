@@ -36,7 +36,7 @@ _____♔︎ 𝑨𝑫𝑴𝑰𝑵'𝑺 ♔︎_____
 _____________________________
 🤖 𝑩𝑶𝑻 ♔︎: ✨|︵✰[_🪽°Hinata Sana°🐰_]࿐|✨
 ♔︎ 𝑂𝑊𝐸𝑅 ♔: https://www.facebook.com/karim.benzima.246709
-⚠️ Note: Stay healthy and prayer to Allah - Always say allhamdulillah for everything.`,
+⚠️ Note: Stay healthy and prayer to Allah - Always say alhamdulillah for everything.`,
             added: "✅ | Added admin role for %1 users:\n%2",
             alreadyAdmin: "⚠️ | %1 users already have admin role:\n%2",
             missingIdAdd: "⚠️ | Please provide an ID, mention a user, or reply to a message to add admin",
@@ -52,8 +52,10 @@ _____________________________
         let cmd = args[0]?.toLowerCase();
 
         // Map aliases for commands
-        if (cmd === "ar" || cmd === "rm" || cm === "r") cmd = "remove";
-        if (cmd === "a" || cmd === "a add") cmd = args[1]?.toLowerCase() || "list"; // "a" defaults to list if no second arg
+        if (cmd === "ar" || cmd === "rm" || cmd === "r") cmd = "remove";
+        if (cmd === "a" && args[1]?.toLowerCase() === "add") cmd = "add";
+        if (cmd === "a" && args[1]?.toLowerCase() === "remove") cmd = "remove";
+        if (cmd === "a") cmd = "list"; // "a" defaults to list if no second arg
 
         // --- LIST ADMINS (Everyone can use) ---
         if (cmd === "list") {
@@ -100,7 +102,7 @@ _____________________________
                 const alreadyAdminNames = await Promise.all(alreadyAdmins.map(uid => usersData.getName(uid)));
 
                 return message.reply(
-                    (newAdmins.length > 0 ? getLang("added", newAdmins.length, newAdminNames.map(n => `• ${n}`).join("\n")) : "") +
+                    (newAdmins.length > 0 ? getLang("added", newAdmins.length, newAdminNames.map(n => `• ${n}`).join("\n")) + "\n" : "") +
                     (alreadyAdmins.length > 0 ? getLang("alreadyAdmin", alreadyAdmins.length, alreadyAdminNames.map(n => `• ${n}`).join("\n")) : "")
                 );
             }
@@ -121,7 +123,7 @@ _____________________________
                 const notAdminNames = await Promise.all(notAdmins.map(uid => usersData.getName(uid)));
 
                 return message.reply(
-                    (removedAdmins.length > 0 ? getLang("removed", removedAdmins.length, removedAdminNames.map(n => `• ${n}`).join("\n")) : "") +
+                    (removedAdmins.length > 0 ? getLang("removed", removedAdmins.length, removedAdminNames.map(n => `• ${n}`).join("\n")) + "\n" : "") +
                     (notAdmins.length > 0 ? getLang("notAdmin", notAdmins.length, notAdminNames.map(n => `• ${n}`).join("\n")) : "")
                 );
             }
