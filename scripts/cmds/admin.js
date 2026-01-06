@@ -36,15 +36,14 @@ _____♔︎ 𝑨𝑫𝑴𝑰𝑵'𝑺 ♔︎_____
 _____________________________
 🤖 𝑩𝑶𝑻 ♔︎: ✨|︵✰[_🪽°Hinata Sana°🐰_]࿐|✨
 ♔︎ 𝑂𝑊𝐸𝑅 ♔: https://www.facebook.com/karim.benzima.246709
-⚠️ Note: Stay healthy and prayer to Allah - Always say alhamdulillah for everything.`,
+⚠️ Note:type !help to see all available commands.,
             added: "✅ | Added admin role for %1 users:\n%2",
             alreadyAdmin: "⚠️ | %1 users already have admin role:\n%2",
             missingIdAdd: "⚠️ | Please provide an ID, mention a user, or reply to a message to add admin",
             removed: "✅ | Removed admin role from %1 users:\n%2",
             notAdmin: "⚠️ | %1 users do not have admin role:\n%2",
             missingIdRemove: "⚠️ | Please provide an ID, mention a user, or reply to a message to remove admin",
-            notAllowed: "⛔ | Only the owner can use this command!"
-        }
+            notAllowed: "This Command does not exist, type !help to see all available commands"
     },
 
     onStart: async function ({ message, args, usersData, event, getLang }) {
